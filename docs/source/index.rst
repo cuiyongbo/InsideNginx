@@ -7,6 +7,7 @@ Welcome to Inside nginx's documentation!
 ========================================
 
 .. toctree::
+    :titlesonly:
     :maxdepth: 2
     :caption: Contents:
 
