@@ -11,3 +11,4 @@ focusing on how nginx implements them.
     ngx_array_note
     ngx_list_note
     ngx_queue_note
+    ngx_red_black_tree_note

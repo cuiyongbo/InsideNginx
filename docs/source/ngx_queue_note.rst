@@ -3,6 +3,10 @@ Nginx Queue Note
 ****************
 
 In nginx, queue is implemented using **circular doubly linked list**.
+Its implementation can be found in
+
+    - ngx_queue.h, ngx_queue.c
+
 Followings are structure defintion and pulic interfaces:
 
 .. code-block:: c
