@@ -7,11 +7,13 @@ TODO Tasks
 TODOs
 =====
 
-
+#. Review Data Structure: red black tree
+#. Review Data Structure: radix tree
 
 Completed
 =========
 
+#. Review Data Structure: queue (2020-01-16 09:21 -- 2020-01-16 10:47)
 #. Review Data Structure: array, linked list (2020-01-15 11:30 -- 2020-01-15 18:30)
 #. Review memory pool (2020-01-14 -- 2020-01-15 11:23)
 #. Add documentation backbone (2020-01-14 16:20)
