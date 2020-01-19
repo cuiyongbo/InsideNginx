@@ -40,3 +40,8 @@ Followings are structure definition and public interfaces' declarations:
     ngx_int_t ngx_radix32tree_insert(ngx_radix_tree_t *tree, uint32_t key, uint32_t mask, uintptr_t value);
     ngx_int_t ngx_radix32tree_delete(ngx_radix_tree_t *tree, uint32_t key, uint32_t mask);
     uintptr_t ngx_radix32tree_find(ngx_radix_tree_t *tree, uint32_t key);
+
+
+.. rubric:: Footnotes
+
+.. [#] `Radix tree <https://en.wikipedia.org/wiki/Radix_tree>`_
