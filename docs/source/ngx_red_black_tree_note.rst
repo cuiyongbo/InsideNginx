@@ -4,9 +4,10 @@ Nginx Red Black Tree Note
 
 In nginx, Red black tree are implemented using the algorithm
 described in *Introduction to Algorithms, chapter 13*. Its
-implementation can be found in
+implementation and application can be found in
 
    - ngx_rbtree.h, ngx_rbtree.c
+   - ngx_event_timer.h, ngx_event_timer.c
 
 Followings are structure definition and public interface declarations:
 
