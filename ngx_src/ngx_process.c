@@ -19,7 +19,6 @@ typedef struct {
 } ngx_signal_t;
 
 
-
 static void ngx_execute_proc(ngx_cycle_t *cycle, void *data);
 static void ngx_signal_handler(int signo, siginfo_t *siginfo, void *ucontext);
 static void ngx_process_get_status(void);
@@ -244,120 +243,100 @@ ngx_pid_t ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *da
 	return pid;
 }
 
-
 ngx_pid_t ngx_execute(ngx_cycle_t *cycle, ngx_exec_ctx_t *ctx)
 {
 	return ngx_spawn_process(cycle, ngx_execute_proc, ctx, ctx->name, NGX_PROCESS_DETACHED);
 }
 
-
 static void ngx_execute_proc(ngx_cycle_t *cycle, void *data)
 {
 	ngx_exec_ctx_t  *ctx = data;
-
-	if (execve(ctx->path, ctx->argv, ctx->envp) == -1) {
+	if (execve(ctx->path, ctx->argv, ctx->envp) == -1)
+	{
 		ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
 					  "execve() failed while executing %s \"%s\"",
 					  ctx->name, ctx->path);
 	}
-
 	exit(1);
 }
 
-
-ngx_int_t
-ngx_init_signals(ngx_log_t *log)
+ngx_int_t ngx_init_signals(ngx_log_t *log)
 {
-	ngx_signal_t      *sig;
-	struct sigaction   sa;
-
-	for (sig = signals; sig->signo != 0; sig++) {
+	struct sigaction  sa;
+	for (ngx_signal_t* sig = signals; sig->signo != 0; sig++)
+	{
 		ngx_memzero(&sa, sizeof(struct sigaction));
 
-		if (sig->handler) {
+		if (sig->handler)
+		{
 			sa.sa_sigaction = sig->handler;
 			sa.sa_flags = SA_SIGINFO;
-
-		} else {
+		}
+		else
+		{
 			sa.sa_handler = SIG_IGN;
 		}
 
 		sigemptyset(&sa.sa_mask);
-		if (sigaction(sig->signo, &sa, NULL) == -1) {
-#if (NGX_VALGRIND)
-			ngx_log_error(NGX_LOG_ALERT, log, ngx_errno,
-						  "sigaction(%s) failed, ignored", sig->signame);
-#else
+		if (sigaction(sig->signo, &sa, NULL) == -1)
+		{
 			ngx_log_error(NGX_LOG_EMERG, log, ngx_errno,
 						  "sigaction(%s) failed", sig->signame);
 			return NGX_ERROR;
-#endif
 		}
 	}
-
 	return NGX_OK;
 }
 
-
-static void
-ngx_signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
+static void ngx_signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
 {
-	char            *action;
-	ngx_int_t        ignore;
-	ngx_err_t        err;
-	ngx_signal_t    *sig;
+	ngx_err_t err = ngx_errno;
 
-	ignore = 0;
-
-	err = ngx_errno;
-
-	for (sig = signals; sig->signo != 0; sig++) {
-		if (sig->signo == signo) {
+	ngx_signal_t* sig;
+	for (sig = signals; sig->signo != 0; sig++)
+	{
+		if (sig->signo == signo)
 			break;
-		}
 	}
 
 	ngx_time_sigsafe_update();
 
-	action = "";
+	char* action = "";
+	ngx_int_t ignore = 0;
 
-	switch (ngx_process) {
-
+	switch (ngx_process)
+	{
 	case NGX_PROCESS_MASTER:
 	case NGX_PROCESS_SINGLE:
-		switch (signo) {
-
+		switch (signo)
+		{
 		case ngx_signal_value(NGX_SHUTDOWN_SIGNAL):
 			ngx_quit = 1;
 			action = ", shutting down";
 			break;
-
 		case ngx_signal_value(NGX_TERMINATE_SIGNAL):
 		case SIGINT:
 			ngx_terminate = 1;
 			action = ", exiting";
 			break;
-
 		case ngx_signal_value(NGX_NOACCEPT_SIGNAL):
-			if (ngx_daemonized) {
+			if (ngx_daemonized)
+			{
 				ngx_noaccept = 1;
 				action = ", stop accepting connections";
 			}
 			break;
-
 		case ngx_signal_value(NGX_RECONFIGURE_SIGNAL):
 			ngx_reconfigure = 1;
 			action = ", reconfiguring";
 			break;
-
 		case ngx_signal_value(NGX_REOPEN_SIGNAL):
 			ngx_reopen = 1;
 			action = ", reopening logs";
 			break;
-
 		case ngx_signal_value(NGX_CHANGEBIN_SIGNAL):
-			if (ngx_getppid() == ngx_parent || ngx_new_binary > 0) {
-
+			if (ngx_getppid() == ngx_parent || ngx_new_binary > 0)
+			{
 				/*
 				 * Ignore the signal in the new binary if its parent is
 				 * not changed, i.e. the old binary's process is still
@@ -369,83 +348,73 @@ ngx_signal_handler(int signo, siginfo_t *siginfo, void *ucontext)
 				ignore = 1;
 				break;
 			}
-
 			ngx_change_binary = 1;
 			action = ", changing binary";
 			break;
-
 		case SIGALRM:
 			ngx_sigalrm = 1;
 			break;
-
 		case SIGIO:
 			ngx_sigio = 1;
 			break;
-
 		case SIGCHLD:
 			ngx_reap = 1;
 			break;
 		}
-
 		break;
-
 	case NGX_PROCESS_WORKER:
 	case NGX_PROCESS_HELPER:
-		switch (signo) {
-
+		switch (signo)
+		{
 		case ngx_signal_value(NGX_NOACCEPT_SIGNAL):
-			if (!ngx_daemonized) {
-				break;
-			}
+			if (!ngx_daemonized) break;
 			ngx_debug_quit = 1;
 			/* fall through */
 		case ngx_signal_value(NGX_SHUTDOWN_SIGNAL):
 			ngx_quit = 1;
 			action = ", shutting down";
 			break;
-
 		case ngx_signal_value(NGX_TERMINATE_SIGNAL):
 		case SIGINT:
 			ngx_terminate = 1;
 			action = ", exiting";
 			break;
-
 		case ngx_signal_value(NGX_REOPEN_SIGNAL):
 			ngx_reopen = 1;
 			action = ", reopening logs";
 			break;
-
 		case ngx_signal_value(NGX_RECONFIGURE_SIGNAL):
 		case ngx_signal_value(NGX_CHANGEBIN_SIGNAL):
 		case SIGIO:
 			action = ", ignoring";
 			break;
 		}
-
 		break;
 	}
 
-	if (siginfo && siginfo->si_pid) {
+	if (siginfo && siginfo->si_pid)
+	{
 		ngx_log_error(NGX_LOG_NOTICE, ngx_cycle->log, 0,
 					  "signal %d (%s) received from %P%s",
 					  signo, sig->signame, siginfo->si_pid, action);
-
-	} else {
+	}
+	else
+	{
 		ngx_log_error(NGX_LOG_NOTICE, ngx_cycle->log, 0,
 					  "signal %d (%s) received%s",
 					  signo, sig->signame, action);
 	}
 
-	if (ignore) {
+	if (ignore)
+	{
 		ngx_log_error(NGX_LOG_CRIT, ngx_cycle->log, 0,
 					  "the changing binary signal is ignored: "
 					  "you should shutdown or terminate "
 					  "before either old or new binary's process");
 	}
 
-	if (signo == SIGCHLD) {
+	if (signo == SIGCHLD)
 		ngx_process_get_status();
-	}
 
 	ngx_set_errno(err);
 }

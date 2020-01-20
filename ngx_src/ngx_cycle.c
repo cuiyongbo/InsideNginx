@@ -889,22 +889,6 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
             return NGX_OK;
         }
 
-#if (NGX_WIN32)
-
-        /* remap at the required address */
-
-        if (ngx_shm_remap(&zn->shm, sp->addr) != NGX_OK) {
-            return NGX_ERROR;
-        }
-
-        sp = (ngx_slab_pool_t *) zn->shm.addr;
-
-        if (sp == sp->addr) {
-            return NGX_OK;
-        }
-
-#endif
-
         ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
                       "shared zone \"%V\" has no equal addresses: %p vs %p",
                       &zn->shm.name, sp->addr, sp);
@@ -915,20 +899,12 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
     sp->min_shift = 3;
     sp->addr = zn->shm.addr;
 
-#if (NGX_HAVE_ATOMIC_OPS)
-
-    file = NULL;
-
-#else
-
     file = ngx_pnalloc(cycle->pool, cycle->lock_file.len + zn->shm.name.len);
     if (file == NULL) {
         return NGX_ERROR;
     }
 
     (void) ngx_sprintf(file, "%V%V%Z", &cycle->lock_file, &zn->shm.name);
-
-#endif
 
     if (ngx_shmtx_create(&sp->mutex, &sp->lock, file) != NGX_OK) {
         return NGX_ERROR;
@@ -939,44 +915,36 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
     return NGX_OK;
 }
 
-
-ngx_int_t
-ngx_create_pidfile(ngx_str_t *name, ngx_log_t *log)
+ngx_int_t ngx_create_pidfile(ngx_str_t *name, ngx_log_t *log)
 {
-    size_t      len;
-    ngx_uint_t  create;
-    ngx_file_t  file;
-    u_char      pid[NGX_INT64_LEN + 2];
-
-    if (ngx_process > NGX_PROCESS_MASTER) {
+    if (ngx_process > NGX_PROCESS_MASTER)
         return NGX_OK;
-    }
 
+    ngx_file_t  file;
     ngx_memzero(&file, sizeof(ngx_file_t));
 
     file.name = *name;
     file.log = log;
 
-    create = ngx_test_config ? NGX_FILE_CREATE_OR_OPEN : NGX_FILE_TRUNCATE;
-
-    file.fd = ngx_open_file(file.name.data, NGX_FILE_RDWR,
-                            create, NGX_FILE_DEFAULT_ACCESS);
-
-    if (file.fd == NGX_INVALID_FILE) {
+    ngx_uint_t create = ngx_test_config ? NGX_FILE_CREATE_OR_OPEN : NGX_FILE_TRUNCATE;
+    file.fd = ngx_open_file(file.name.data, NGX_FILE_RDWR, create, NGX_FILE_DEFAULT_ACCESS);
+    if (file.fd == NGX_INVALID_FILE)
+    {
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno,
                       ngx_open_file_n " \"%s\" failed", file.name.data);
         return NGX_ERROR;
     }
 
-    if (!ngx_test_config) {
-        len = ngx_snprintf(pid, NGX_INT64_LEN + 2, "%P%N", ngx_pid) - pid;
-
-        if (ngx_write_file(&file, pid, len, 0) == NGX_ERROR) {
+    if (!ngx_test_config)
+    {
+        u_char pid[NGX_INT64_LEN + 2];
+        size_t len = ngx_snprintf(pid, NGX_INT64_LEN + 2, "%P%N", ngx_pid) - pid;
+        if (ngx_write_file(&file, pid, len, 0) == NGX_ERROR)
             return NGX_ERROR;
-        }
     }
 
-    if (ngx_close_file(file.fd) == NGX_FILE_ERROR) {
+    if (ngx_close_file(file.fd) == NGX_FILE_ERROR)
+    {
         ngx_log_error(NGX_LOG_ALERT, log, ngx_errno,
                       ngx_close_file_n " \"%s\" failed", file.name.data);
     }
@@ -984,18 +952,12 @@ ngx_create_pidfile(ngx_str_t *name, ngx_log_t *log)
     return NGX_OK;
 }
 
-
-void
-ngx_delete_pidfile(ngx_cycle_t *cycle)
+void ngx_delete_pidfile(ngx_cycle_t *cycle)
 {
-    u_char           *name;
-    ngx_core_conf_t  *ccf;
-
-    ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
-
-    name = ngx_new_binary ? ccf->oldpid.data : ccf->pid.data;
-
-    if (ngx_delete_file(name) == NGX_FILE_ERROR) {
+    ngx_core_conf_t* ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
+    u_char* name = ngx_new_binary ? ccf->oldpid.data : ccf->pid.data;
+    if (ngx_delete_file(name) == NGX_FILE_ERROR)
+    {
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                       ngx_delete_file_n " \"%s\" failed", name);
     }
@@ -1012,10 +974,7 @@ ngx_int_t ngx_signal_process(ngx_cycle_t *cycle, char *sig)
 
     file.name = ccf->pid;
     file.log = cycle->log;
-
-    file.fd = ngx_open_file(file.name.data, NGX_FILE_RDONLY,
-                            NGX_FILE_OPEN, NGX_FILE_DEFAULT_ACCESS);
-
+    file.fd = ngx_open_file(file.name.data, NGX_FILE_RDONLY, NGX_FILE_OPEN, NGX_FILE_DEFAULT_ACCESS);
     if (file.fd == NGX_INVALID_FILE)
 	{
         ngx_log_error(NGX_LOG_ERR, cycle->log, ngx_errno,
@@ -1037,7 +996,7 @@ ngx_int_t ngx_signal_process(ngx_cycle_t *cycle, char *sig)
     while (n-- && (buf[n] == CR || buf[n] == LF)) { /* void */ }
 
     ngx_pid_t pid = ngx_atoi(buf, ++n);
-    if (pid == (ngx_pid_t) NGX_ERROR)
+    if (pid == (ngx_pid_t)NGX_ERROR)
 	{
         ngx_log_error(NGX_LOG_ERR, cycle->log, 0,
                       "invalid PID number \"%*s\" in \"%s\"",

@@ -17,13 +17,7 @@ Source files:
 
 .. code-block:: c
 
-    ngx_pool_t* ngx_create_pool(size_t size, ngx_log_t *log)
-    {
-        // memory alignment
-        ngx_pool_t* p = ngx_memalign(NGX_POOL_ALIGNMENT, size, log);
-
-        // ...
-    }
+    ngx_pool_t* ngx_create_pool(size_t size, ngx_log_t *log);
 
     void ngx_destroy_pool(ngx_pool_t *pool)
     {
@@ -61,7 +55,6 @@ Source files:
     {
         // ...
 
-        // access optimization
         ngx_uint_t n = 0;
         ngx_pool_large_t* large = pool->large;
         for (; large; large = large->next)
@@ -72,6 +65,7 @@ Source files:
                 return newBlock;
             }
 
+            // access optimization
             if (n++ > 3)
                 break;
         }
