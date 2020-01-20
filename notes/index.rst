@@ -17,6 +17,7 @@ Welcome to Inside nginx's documentation!
     ngx_signal_processing_note
     ngx_event_cycle_note
     ngx_load_balance_note
+    ngx_thread_pool_note
 
 Indices and tables
 ==================
