@@ -9,4 +9,6 @@ Nginx server framework: Concurrent server: pre-fork a fixed number of child proc
 .. toctree::
     :titlesonly:
 
-    ngx_timer_event_note
+    ngx_event_note
+    ngx_event_timer_note
+    ngx_event_process_cycle_note

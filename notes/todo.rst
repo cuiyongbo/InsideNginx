@@ -7,11 +7,12 @@ TODO Tasks
 TODOs
 =====
 
-#. Review nginx event cycle (2020-01-20 15:00)
+#. Review signal processing
 
 Completed
 =========
 
+#. Review nginx event cycle (2020-01-20 15:00 -- 2020-01-20 18:00)
 #. Review nginx timer event (2020-01-20 10:00 -- 2020-01-20 15:00)
 #. Review Data Structure: radix tree (2020-01-19 15:30 -- 2020-01-19 17:37)
 #. Review Data Structure: red black tree (2020-01-17 -- 2020-01-19 15:08)

@@ -8,7 +8,9 @@ implementation and application can be found in
 
    - ngx_rbtree.h, ngx_rbtree.c
    - ngx_event_timer.h, ngx_event_timer.c
+   - ngx_string.h, ngx_string.c
 
+Applications include dumping configure file, event timers.
 Followings are structure definition and public interface declarations:
 
 .. code-block:: c
