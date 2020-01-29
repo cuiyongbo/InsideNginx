@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) Igor Sysoev
  * Copyright (C) Nginx, Inc.
@@ -80,7 +79,6 @@ ngx_signal_t  signals[] = {
 
 	{ 0, NULL, "", NULL }
 };
-
 
 ngx_pid_t ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *name, ngx_int_t respawn)
 {
@@ -169,7 +167,6 @@ ngx_pid_t ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *da
 		}
 
 		ngx_channel = ngx_processes[s].channel[1];
-
 	}
 	else
 	{

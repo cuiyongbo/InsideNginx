@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) Igor Sysoev
  * Copyright (C) Nginx, Inc.
@@ -244,7 +243,7 @@ void ngx_master_process_cycle(ngx_cycle_t *cycle)
 		if (ngx_restart)
 		{
 			ngx_restart = 0;
-			ngx_start_worker_processes(cycle, ccf->worker_processes, NGX_PROCESS_RESPAWN);
+			ngx_start_worker_processes(cycle, ccf->worker_processes, dd);
 			ngx_start_cache_manager_processes(cycle, 0);
 			live = 1;
 		}
@@ -520,23 +519,19 @@ static void ngx_signal_worker_processes(ngx_cycle_t *cycle, int signo)
 	}
 }
 
-
-static ngx_uint_t
-ngx_reap_children(ngx_cycle_t *cycle)
+static ngx_uint_t ngx_reap_children(ngx_cycle_t *cycle)
 {
-	ngx_int_t         i, n;
-	ngx_uint_t        live;
-	ngx_channel_t     ch;
 	ngx_core_conf_t  *ccf;
 
+	ngx_channel_t     ch;
 	ngx_memzero(&ch, sizeof(ngx_channel_t));
 
-	ch.command = NGX_CMD_CLOSE_CHANNEL;
 	ch.fd = -1;
+	ch.command = NGX_CMD_CLOSE_CHANNEL;
 
-	live = 0;
-	for (i = 0; i < ngx_last_process; i++) {
-
+	ngx_uint_t live = 0;
+	for (ngx_int_t i = 0; i < ngx_last_process; i++)
+	{
 		ngx_log_debug7(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
 					   "child: %i %P e:%d t:%d d:%d r:%d j:%d",
 					   i,
@@ -547,13 +542,13 @@ ngx_reap_children(ngx_cycle_t *cycle)
 					   ngx_processes[i].respawn,
 					   ngx_processes[i].just_spawn);
 
-		if (ngx_processes[i].pid == -1) {
+		if (ngx_processes[i].pid == -1)
 			continue;
-		}
 
-		if (ngx_processes[i].exited) {
-
-			if (!ngx_processes[i].detached) {
+		if (ngx_processes[i].exited)
+		{
+			if (!ngx_processes[i].detached)
+			{
 				ngx_close_channel(ngx_processes[i].channel, cycle->log);
 
 				ngx_processes[i].channel[0] = -1;
@@ -562,7 +557,8 @@ ngx_reap_children(ngx_cycle_t *cycle)
 				ch.pid = ngx_processes[i].pid;
 				ch.slot = i;
 
-				for (n = 0; n < ngx_last_process; n++) {
+				for (ngx_int_t n = 0; n < ngx_last_process; n++)
+				{
 					if (ngx_processes[n].exited
 						|| ngx_processes[n].pid == -1
 						|| ngx_processes[n].channel[0] == -1)
@@ -597,7 +593,6 @@ ngx_reap_children(ngx_cycle_t *cycle)
 					continue;
 				}
 
-
 				ch.command = NGX_CMD_OPEN_CHANNEL;
 				ch.pid = ngx_processes[ngx_process_slot].pid;
 				ch.slot = ngx_process_slot;
@@ -610,13 +605,11 @@ ngx_reap_children(ngx_cycle_t *cycle)
 				continue;
 			}
 
-			if (ngx_processes[i].pid == ngx_new_binary) {
-
-				ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx,
-													   ngx_core_module);
-
-				if (ngx_rename_file((char *) ccf->oldpid.data,
-									(char *) ccf->pid.data)
+			if (ngx_processes[i].pid == ngx_new_binary)
+			{
+				ngx_core_conf_t* ccf = (ngx_core_conf_t*)ngx_get_conf(cycle->conf_ctx, ngx_core_module);
+				if (ngx_rename_file((char *)ccf->oldpid.data,
+									(char *)ccf->pid.data)
 					== NGX_FILE_ERROR)
 				{
 					ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
@@ -633,14 +626,13 @@ ngx_reap_children(ngx_cycle_t *cycle)
 				}
 			}
 
-			if (i == ngx_last_process - 1) {
+			if (i == ngx_last_process - 1)
 				ngx_last_process--;
-
-			} else {
+			else
 				ngx_processes[i].pid = -1;
-			}
-
-		} else if (ngx_processes[i].exiting || !ngx_processes[i].detached) {
+		}
+		else if (ngx_processes[i].exiting || !ngx_processes[i].detached)
+		{
 			live = 1;
 		}
 	}
