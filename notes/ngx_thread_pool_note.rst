@@ -151,13 +151,10 @@ Following are code snippets showing the calling hierarchy:
             return NGX_ERROR;
         }
 
+        // task queue is overflowing
         if (tp->waiting >= tp->max_queue)
         {
             (void) ngx_thread_mutex_unlock(&tp->mtx, tp->log);
-
-            ngx_log_error(NGX_LOG_ERR, tp->log, 0,
-                          "thread pool \"%V\" queue overflow: %i tasks waiting",
-                          &tp->name, tp->waiting);
             return NGX_ERROR;
         }
 
