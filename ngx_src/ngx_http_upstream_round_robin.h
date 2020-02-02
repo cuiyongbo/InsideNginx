@@ -55,7 +55,8 @@ struct ngx_http_upstream_rr_peer_s {
 
 typedef struct ngx_http_upstream_rr_peers_s  ngx_http_upstream_rr_peers_t;
 
-struct ngx_http_upstream_rr_peers_s {
+struct ngx_http_upstream_rr_peers_s
+{
     ngx_uint_t                      number;
 
     ngx_uint_t                      total_weight;

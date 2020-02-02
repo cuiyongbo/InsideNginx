@@ -102,6 +102,70 @@ Some code sinppets:
         return best;
     }
 
+.. code-block:: c
+    :caption: Least Connections method
+
+    static ngx_int_t ngx_http_upstream_get_least_conn_peer(ngx_peer_connection_t *pc, void *data)
+    {
+        for (peer = peers->peer, i = 0;
+             peer;
+             peer = peer->next, i++)
+        {
+            // ...
+
+            /*
+             * select peer with least number of connections; if there are
+             * multiple peers with the same number of connections, select
+             * based on round-robin
+             */
+
+            if (best == NULL
+                || peer->conns * best->weight < best->conns * peer->weight)
+            {
+                best = peer;
+                many = 0;
+                p = i;
+
+            } else if (peer->conns * best->weight == best->conns * peer->weight) {
+                many = 1;
+            }
+        }
+
+        // ...
+
+        if (many)
+        {
+            for (peer = best, i = p;
+                 peer;
+                 peer = peer->next, i++)
+            {
+                // ...
+
+                if (peer->conns * best->weight != best->conns * peer->weight) {
+                    continue;
+                }
+
+                peer->current_weight += peer->effective_weight;
+                total += peer->effective_weight;
+
+                if (peer->effective_weight < peer->weight) {
+                    peer->effective_weight++;
+                }
+
+                if (peer->current_weight > best->current_weight) {
+                    best = peer;
+                    p = i;
+                }
+            }
+        }
+
+        best->current_weight -= total;
+        rrp->current = best;
+        return NGX_OK;
+
+        // ...
+    }
+
 
 .. rubric:: Footnotes
 
