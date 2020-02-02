@@ -30,6 +30,8 @@ unless both of the other servers are unavailable. With this configuration of wei
 Nginx load balance implementation can be found in:
 
     - ngx_http_upstream_round_robin.h, ngx_http_upstream_round_robin.c
+    - ngx_http_upstream_least_conn_module.c
+    - ngx_http_upstream_ip_hash_module.c
 
 
 Some code sinppets:
@@ -164,6 +166,62 @@ Some code sinppets:
         return NGX_OK;
 
         // ...
+    }
+
+.. code-block:: c
+    :caption: IP Hash method
+
+    // TODO: how IP Hash method routes to the same IP
+    static ngx_int_t ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
+    {
+        // ...
+        ngx_uint_t hash = iphp->hash;
+        for ( ;; )
+        {
+            for (ngx_uint_t i = 0; i < (ngx_uint_t)iphp->addrlen; i++) {
+                hash = (hash * 113 + iphp->addr[i]) % 6271;
+            }
+
+            ngx_int_t w = hash % iphp->rrp.peers->total_weight;
+            peer = iphp->rrp.peers->peer;
+            ngx_uint_t p = 0;
+
+            while (w >= peer->weight)
+            {
+                w -= peer->weight;
+                peer = peer->next;
+                p++;
+            }
+
+            n = p / (8 * sizeof(uintptr_t));
+            m = (uintptr_t) 1 << p % (8 * sizeof(uintptr_t));
+
+            if (iphp->rrp.tried[n] & m) {
+                goto next;
+            }
+
+            // ...
+
+            break;
+
+        next:
+
+            // revert to round robin method after trying more than 20 times
+            if (++iphp->tries > 20)
+            {
+                ngx_http_upstream_rr_peers_unlock(iphp->rrp.peers);
+                return iphp->get_rr_peer(pc, &iphp->rrp);
+            }
+        }
+
+        iphp->rrp.current = peer;
+
+        peer->conns++;
+
+        iphp->rrp.tried[n] |= m;
+        iphp->hash = hash;
+
+        return NGX_OK;
     }
 
 
