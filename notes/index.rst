@@ -14,6 +14,7 @@ Welcome to Inside nginx's documentation!
     todo
     ngx_data_structure_note
     ngx_memory_management_note
+    ngx_process_roles_note
     ngx_signal_processing_note
     ngx_event_cycle_note
     ngx_load_balance_note

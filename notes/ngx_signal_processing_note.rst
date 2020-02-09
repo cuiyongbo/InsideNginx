@@ -2,8 +2,13 @@
 Signal Processing Note
 **********************
 
-In nginx, Following signals are handled with specific intentions,
-signals includes:
+In nginx, processes are mainly of three kinds: master process, worker process and cache-related process.
+And master process loads configuration, launches workers, and performs non-stop upgrade etc.
+worker process is the main workhorse, processing income requests. and signals are used to communicate
+with them. For example to perform upgrade, ``SIGUSR2`` are send to master process, and master process would
+do some upgrade stuff when receiving this signal.
+
+Following signals are handled with specific intentions, including:
 
 .. code-block:: c
 

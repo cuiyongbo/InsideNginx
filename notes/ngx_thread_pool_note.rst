@@ -7,7 +7,7 @@ Nginx uses thread pool to schedule tasks, which has several advantages:
     * pre-create fixed number worker threads to avoid frequently creating and destroying threads for each task
     * avoid frequent context switching
 
-However, these advantages also come with costs, including:
+However, nothing comes without a price, including:
 
     * more complex thread synchronization logic
     * may need to take consideration of thread contention, schedule strategy etc.
